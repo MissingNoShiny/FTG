@@ -36,3 +36,10 @@ dependencies {
 
     implementation(project(":FTG-Core"))
 }
+
+tasks.withType<Jar> {
+    manifest {
+        attributes["Main-Class"] = "io.ktor.server.netty.EngineMain"
+    }
+    from(configurations.getByName("runtimeClasspath").map { if (it.isDirectory) it else zipTree(it) })
+}

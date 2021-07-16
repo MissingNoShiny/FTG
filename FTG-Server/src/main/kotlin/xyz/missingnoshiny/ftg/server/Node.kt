@@ -13,4 +13,7 @@ class Node(session: DefaultWebSocketSession) {
     }
 
     var roomCount = 0
+
+    val weight: Int
+        get() = roomCount
 }

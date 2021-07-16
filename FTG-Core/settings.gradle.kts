@@ -1,1 +1,0 @@
-roorProject.name = "FTG-Core"

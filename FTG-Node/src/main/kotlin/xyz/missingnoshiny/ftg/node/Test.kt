@@ -10,8 +10,11 @@ import kotlinx.serialization.json.encodeToJsonElement
 import xyz.missingnoshiny.ftg.core.events.IncomingEvent
 import xyz.missingnoshiny.ftg.core.events.EventContext
 import xyz.missingnoshiny.ftg.node.events.NodeHeartbeatEvent
+import xyz.missingnoshiny.ftg.node.games.util.Dictionary
+import java.io.File
 
 fun main() {
-    val e = NodeHeartbeatEvent(0)
-    println(e::class.simpleName)
+    val d = Dictionary.fromFile(File("dictionary.txt")) { true }
+    val p = d.getLetterFrequencies()
+
 }
