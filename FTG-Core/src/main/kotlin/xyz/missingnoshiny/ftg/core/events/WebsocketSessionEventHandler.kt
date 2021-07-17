@@ -16,12 +16,10 @@ class WebsocketSessionEventHandler(private val context: EventContext, private va
 
     suspend fun emitEvent(outgoingEvent: OutgoingEvent) {
         val data = "${outgoingEvent::class.simpleName.toString()}|${Json { encodeDefaults = true }.encodeToString(serializer(outgoingEvent::class.createType()), outgoingEvent)}"
-        println(data)
         session.send(data)
     }
 
     private fun handleIncomingEvent(eventString: String) {
-        println(eventString)
         val (eventName, json) = eventString.split("|", limit = 2)
         val cls = eventMap[eventName] ?: throw Exception("Invalid event")
         val event = Json.decodeFromString(serializer(cls.createType()), json) as IncomingEvent

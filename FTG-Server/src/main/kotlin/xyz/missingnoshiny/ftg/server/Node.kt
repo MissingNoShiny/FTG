@@ -1,18 +1,25 @@
 package xyz.missingnoshiny.ftg.server
 
-import io.ktor.http.cio.websocket.*
-import xyz.missingnoshiny.ftg.core.events.WebsocketSessionEventHandler
-import xyz.missingnoshiny.ftg.server.events.NodeHeartbeatEvent
-import xyz.missingnoshiny.ftg.server.events.NodeServerEventContext
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
+import kotlin.time.ExperimentalTime
 
-class Node(session: DefaultWebSocketSession) {
-    val handler = WebsocketSessionEventHandler(NodeServerEventContext(this), session)
-
-    init {
-        handler.registerIncomingEvent(NodeHeartbeatEvent::class)
-    }
-
+@Serializable
+class Node {
     var roomCount = 0
+    var apiAddress: String? = null
+    var lastHeartBeat: Instant = Instant.DISTANT_PAST
+
+    /**
+     *
+     */
+    val isReady: Boolean
+        get() = apiAddress != null
+
+    @OptIn(ExperimentalTime::class)
+    val isAlive: Boolean
+        get() = lastHeartBeat.minus(Clock.System.now()).inWholeSeconds < 10
 
     val weight: Int
         get() = roomCount

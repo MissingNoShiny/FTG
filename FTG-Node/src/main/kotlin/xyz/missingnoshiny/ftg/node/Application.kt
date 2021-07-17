@@ -1,23 +1,20 @@
 package xyz.missingnoshiny.ftg.node
 
+import com.typesafe.config.ConfigFactory
 import io.ktor.application.*
 import io.ktor.client.*
 import io.ktor.client.features.websocket.*
+import io.ktor.config.*
 import io.ktor.http.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import xyz.missingnoshiny.ftg.core.events.EmptyContext
-import xyz.missingnoshiny.ftg.core.events.EventContext
 import xyz.missingnoshiny.ftg.core.events.WebsocketSessionEventHandler
 import xyz.missingnoshiny.ftg.node.events.NodeHeartbeatEvent
+import xyz.missingnoshiny.ftg.node.events.NodeReadyEvent
 import xyz.missingnoshiny.ftg.node.plugins.configureRouting
 import xyz.missingnoshiny.ftg.node.plugins.configureSerialization
-import kotlin.reflect.KClass
+import kotlin.system.exitProcess
 
 val rooms = mutableListOf<Room>()
 
@@ -45,6 +42,11 @@ fun Application.test() {
     launch {
         client.webSocket(method = HttpMethod.Get, host = "127.0.0.1", port = 1308, path = "/") {
             val handler = WebsocketSessionEventHandler(EmptyContext(), this)
+
+            val appConfig = HoconApplicationConfig(ConfigFactory.load())
+            val apiAddress = "${appConfig.property("api.host").getString()}:${appConfig.property("api.port").getString()}"
+            handler.emitEvent(NodeReadyEvent(apiAddress))
+
             while (true) {
                 handler.emitEvent(NodeHeartbeatEvent(rooms.size))
                 println("Ok ${rooms.size}")
@@ -52,4 +54,6 @@ fun Application.test() {
             }
         }
     }
+
+    exitProcess(-1)
 }
