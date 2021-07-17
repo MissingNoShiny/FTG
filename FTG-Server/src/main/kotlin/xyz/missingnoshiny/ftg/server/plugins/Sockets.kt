@@ -5,7 +5,6 @@ import io.ktor.features.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.launch
 import xyz.missingnoshiny.ftg.server.Node
 import xyz.missingnoshiny.ftg.server.nodes
 import java.net.InetAddress

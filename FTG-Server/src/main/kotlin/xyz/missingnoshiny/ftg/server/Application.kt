@@ -1,7 +1,8 @@
 package xyz.missingnoshiny.ftg.server
 
 import io.ktor.application.*
-import xyz.missingnoshiny.ftg.server.plugins.*
+import xyz.missingnoshiny.ftg.server.plugins.configureRouting
+import xyz.missingnoshiny.ftg.server.plugins.configureSockets
 
 val nodes = mutableListOf<Node>()
 
@@ -15,6 +16,7 @@ fun main(args: Array<String>): Unit =
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
+    DatabaseInitializer
     configureRouting()
     configureSockets()
 }

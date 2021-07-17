@@ -30,6 +30,12 @@ dependencies {
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
 
+    implementation("org.postgresql:postgresql:42.2.2")
+    implementation("org.jetbrains.exposed:exposed-core:0.31.1")
+    implementation("org.jetbrains.exposed:exposed-dao:0.31.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.31.1")
+    implementation("com.zaxxer:HikariCP:5.0.0")
+
     implementation(project(":FTG-Core"))
 }
 

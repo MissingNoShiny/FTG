@@ -43,7 +43,7 @@ fun Application.test() {
     }
 
     launch {
-        client.webSocket(method = HttpMethod.Get, host = "missingsnoshiny.xyz", port = 1308, path = "/") {
+        client.webSocket(method = HttpMethod.Get, host = "127.0.0.1", port = 1308, path = "/") {
             val handler = WebsocketSessionEventHandler(EmptyContext(), this)
             while (true) {
                 handler.emitEvent(NodeHeartbeatEvent(rooms.size))
