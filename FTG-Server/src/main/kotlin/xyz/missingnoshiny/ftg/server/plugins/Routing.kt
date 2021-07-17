@@ -12,8 +12,8 @@ import xyz.missingnoshiny.ftg.server.nodes
 fun Application.configureRouting() {
 
     routing {
-        get("/") {
-            call.respondText(nodes.map { "${it.roomCount}" }.toString())
+        get("/nodes") {
+            call.respond(nodes.filter { it.isReady })
         }
     }
 }

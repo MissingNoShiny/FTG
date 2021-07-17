@@ -54,6 +54,4 @@ fun Application.test() {
             }
         }
     }
-
-    exitProcess(-1)
 }

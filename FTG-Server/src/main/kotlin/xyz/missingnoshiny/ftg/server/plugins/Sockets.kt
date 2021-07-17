@@ -41,7 +41,7 @@ fun Application.configureSockets() {
             handler.registerIncomingEvent(NodeHeartbeatEvent::class)
 
             nodes += node
-            handler.handleIncomingEvents()
+            handler.handleIncomingEvents()  // Blocking until connection is closed
             nodes -= node
         }
     }
