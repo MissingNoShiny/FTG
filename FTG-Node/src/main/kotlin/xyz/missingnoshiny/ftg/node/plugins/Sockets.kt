@@ -1,22 +1,12 @@
 package xyz.missingnoshiny.ftg.node.plugins
 
-import io.ktor.http.cio.websocket.*
-import io.ktor.websocket.*
-import java.time.*
-import io.ktor.network.selector.*
-import io.ktor.network.sockets.*
-import io.ktor.utils.io.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import java.io.InputStream
-import java.util.*
-import io.ktor.network.tls.*
-import io.ktor.utils.io.core.*
 import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.request.*
+import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
+import io.ktor.websocket.*
+import xyz.missingnoshiny.ftg.node.Player
+import xyz.missingnoshiny.ftg.node.rooms
+import java.time.Duration
 
 fun Application.configureSockets() {
     install(WebSockets) {
@@ -26,21 +16,12 @@ fun Application.configureSockets() {
         masking = false
     }
 
-
-
     routing {
-        webSocket("/") { // websocketSession
-            for (frame in incoming) {
-                when (frame) {
-                    is Frame.Text -> {
-                        val text = frame.readText()
-                        outgoing.send(Frame.Text("YOU SAID: $text"))
-                        if (text.equals("bye", ignoreCase = true)) {
-                            close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
-                        }
-                    }
-                }
-            }
+        webSocket("/room/{id}") {
+            val id = call.parameters["id"]!!
+            if (id !in rooms) return@webSocket this.close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Invalid room id"))
+            val room = rooms[id]!!
+            room.players.add(Player(this))
         }
     }
 }

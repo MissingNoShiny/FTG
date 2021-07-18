@@ -6,6 +6,7 @@ import xyz.missingnoshiny.ftg.server.plugins.configureSerialization
 import xyz.missingnoshiny.ftg.server.plugins.configureSockets
 
 val nodes = mutableListOf<Node>()
+val rooms = HashMap<String, Node>()
 
 fun main(args: Array<String>): Unit =
     io.ktor.server.netty.EngineMain.main(args)

@@ -13,10 +13,10 @@ fun Application.configureRouting() {
         get("/")   {
             call.respondText("Node")
         }
-        get("/create") {
-            val room = Room()
-            println(room.id)
-            rooms.add(room)
+        get("/createRoom/{id}") {
+            val id = call.parameters["id"]!!
+            if (id in rooms) call.respond(HttpStatusCode.InternalServerError)
+            rooms[id] = Room()
             call.respond(HttpStatusCode.Created)
         }
     }

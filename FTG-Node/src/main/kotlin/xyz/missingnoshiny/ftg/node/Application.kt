@@ -16,7 +16,7 @@ import xyz.missingnoshiny.ftg.node.plugins.configureRouting
 import xyz.missingnoshiny.ftg.node.plugins.configureSerialization
 import kotlin.system.exitProcess
 
-val rooms = mutableListOf<Room>()
+val rooms = HashMap<String, Room>()
 
 fun main(args: Array<String>): Unit =
     io.ktor.server.netty.EngineMain.main(args)
