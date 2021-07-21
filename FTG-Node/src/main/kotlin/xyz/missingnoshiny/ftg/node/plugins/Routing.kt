@@ -14,8 +14,7 @@ fun Application.configureRouting() {
         get("/")   {
             call.respondText("Node")
         }
-        // TODO: change to POST
-        get("/createRoom/{id}") {
+        post("/createRoom/{id}") {
             val id = call.parameters["id"]!!
             if (id in rooms) call.respond(HttpStatusCode.InternalServerError)
             val room = Room(id)

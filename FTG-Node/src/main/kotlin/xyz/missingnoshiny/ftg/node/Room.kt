@@ -18,11 +18,9 @@ class Room(private val id: String) {
             if (players.isEmpty())  {
                 for (i in 1..60) {
                     delay(Duration.Companion.seconds(1))
-                    println(id)
                     if (players.isNotEmpty()) break
                 }
                 // 60 seconds with no players, destroy room
-                println("Destroy !!!")
                 rooms.remove(id)
                 serverConnectionHandler?.emitEvent(NodeRemoveRoomEvent(id))
                 break
