@@ -10,6 +10,7 @@ import xyz.missingnoshiny.ftg.core.events.WebsocketSessionEventHandler
 import xyz.missingnoshiny.ftg.server.Node
 import xyz.missingnoshiny.ftg.server.events.NodeHeartbeatEvent
 import xyz.missingnoshiny.ftg.server.events.NodeReadyEvent
+import xyz.missingnoshiny.ftg.server.events.NodeRemoveRoomEvent
 import xyz.missingnoshiny.ftg.server.events.NodeServerEventContext
 import xyz.missingnoshiny.ftg.server.nodes
 import java.time.Duration
@@ -39,6 +40,7 @@ fun Application.configureSockets() {
             val handler = WebsocketSessionEventHandler(NodeServerEventContext(node), this)
             handler.registerIncomingEvent(NodeReadyEvent::class)
             handler.registerIncomingEvent(NodeHeartbeatEvent::class)
+            handler.registerIncomingEvent(NodeRemoveRoomEvent::class)
 
             nodes += node
             handler.handleIncomingEvents()  // Blocking until connection is closed

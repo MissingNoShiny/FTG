@@ -17,6 +17,8 @@ import xyz.missingnoshiny.ftg.node.plugins.configureSerialization
 import kotlin.system.exitProcess
 
 val rooms = HashMap<String, Room>()
+// TODO: Figure out a better way to allow rooms ro remove themselves
+var serverConnectionHandler: WebsocketSessionEventHandler? = null
 
 fun main(args: Array<String>): Unit =
     io.ktor.server.netty.EngineMain.main(args)
@@ -30,7 +32,6 @@ fun main(args: Array<String>): Unit =
 fun Application.module(testing: Boolean = false) {
     configureSerialization()
     configureRouting()
-
 }
 
 @Suppress("unused")
@@ -41,17 +42,19 @@ fun Application.test() {
 
     launch {
         client.webSocket(method = HttpMethod.Get, host = "127.0.0.1", port = 1308, path = "/") {
-            val handler = WebsocketSessionEventHandler(EmptyContext(), this)
+            serverConnectionHandler = WebsocketSessionEventHandler(EmptyContext(), this)
 
             val appConfig = HoconApplicationConfig(ConfigFactory.load())
             val apiAddress = "${appConfig.property("api.host").getString()}:${appConfig.property("api.port").getString()}"
-            handler.emitEvent(NodeReadyEvent(apiAddress))
+            serverConnectionHandler!!.emitEvent(NodeReadyEvent(apiAddress))
 
             while (true) {
-                handler.emitEvent(NodeHeartbeatEvent(rooms.size))
-                println("Ok ${rooms.size}")
+                if (!serverConnectionHandler!!.connected) break
+                serverConnectionHandler!!.emitEvent(NodeHeartbeatEvent(rooms.size))
+                println("Ok $rooms")
                 delay(5000)
             }
         }
+        exitProcess(-1)
     }
 }

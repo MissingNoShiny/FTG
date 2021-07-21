@@ -1,6 +1,7 @@
 package xyz.missingnoshiny.ftg.server
 
 import io.ktor.application.*
+import xyz.missingnoshiny.ftg.server.plugins.configureCORS
 import xyz.missingnoshiny.ftg.server.plugins.configureRouting
 import xyz.missingnoshiny.ftg.server.plugins.configureSerialization
 import xyz.missingnoshiny.ftg.server.plugins.configureSockets
@@ -22,4 +23,5 @@ fun Application.module(testing: Boolean = false) {
     configureSerialization()
     configureRouting()
     configureSockets()
+    configureCORS()
 }

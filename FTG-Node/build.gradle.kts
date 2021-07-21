@@ -31,8 +31,9 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("org.junit.jupiter:junit-jupiter:5.7.0")
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
     implementation("io.ktor:ktor-client-java:$ktor_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
 
     implementation(project(":FTG-Core"))
 }

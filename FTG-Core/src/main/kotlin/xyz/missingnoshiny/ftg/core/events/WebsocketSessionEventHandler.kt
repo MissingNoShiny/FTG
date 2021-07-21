@@ -1,9 +1,7 @@
 package xyz.missingnoshiny.ftg.core.events
 
 import io.ktor.http.cio.websocket.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
+import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
@@ -36,4 +34,7 @@ class WebsocketSessionEventHandler(private val context: EventContext, private va
             }
         }
     }
+
+    val connected: Boolean
+        get() = session.isActive
 }
