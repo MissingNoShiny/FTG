@@ -2,7 +2,7 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="591ae29d-7a45-4b29-9b40-777ee890d53a" name="ftg" url="">
+      <webServer id="591ae29d-7a45-4b29-9b40-777ee890d53a" name="ftg" url="/root">
         <fileTransfer rootFolder="/root" accessType="SFTP" host="schnaps.fun" port="2021" sshConfigId="6dc216e6-679f-44c7-9d80-a190b767fc8f" sshConfig="root@schnaps.fun:2021 key" keyPair="true">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />

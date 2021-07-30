@@ -1,4 +1,4 @@
-package xyz.missingnoshiny.ftg.server
+package xyz.missingnoshiny.ftg.server.db
 
 import com.typesafe.config.ConfigFactory
 import com.zaxxer.hikari.HikariConfig
@@ -18,6 +18,7 @@ object DatabaseInitializer {
             jdbcUrl = appConfig.property("db.url").getString()
             username = appConfig.property("db.username").getString()
             password = appConfig.property("db.password").getString()
+            maximumPoolSize = 3
         }
         dbConfig.validate()
         return HikariDataSource(dbConfig)

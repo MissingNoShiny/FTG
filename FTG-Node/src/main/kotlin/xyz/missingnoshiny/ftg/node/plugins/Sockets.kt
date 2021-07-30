@@ -18,6 +18,7 @@ fun Application.configureSockets() {
 
     routing {
         webSocket("/room/{id}") {
+
             val id = call.parameters["id"]!!
             if (id !in rooms) return@webSocket this.close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Invalid room id"))
             val room = rooms[id]!!

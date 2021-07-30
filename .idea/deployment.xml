@@ -5,7 +5,7 @@
       <paths name="ftg">
         <serverdata>
           <mappings>
-            <mapping deploy="/FTG" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/FTG" local="$PROJECT_DIR$/FTG-Server/build/libs" web="/FTG" />
           </mappings>
         </serverdata>
       </paths>

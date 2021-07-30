@@ -43,7 +43,10 @@ fun Application.test() {
     }
 
     launch {
-        client.webSocket(method = HttpMethod.Get, host = "127.0.0.1", port = 1308, path = "/") {
+        val remoteHost = environment.config.property("remote.host").getString()
+        val remotePort = environment.config.property("remote.port").getString().toInt()
+        println("$remoteHost:$remotePort")
+        client.wss(method = HttpMethod.Get, host = remoteHost, port = remotePort, path = "/") {
             serverConnectionHandler = WebsocketSessionEventHandler(EmptyContext(), this)
 
             val appConfig = HoconApplicationConfig(ConfigFactory.load())
