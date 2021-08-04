@@ -8,12 +8,21 @@ import org.jetbrains.exposed.sql.`java-time`.CurrentDateTime
 import org.jetbrains.exposed.sql.`java-time`.datetime
 
 object Users: IntIdTable() {
+    enum class Type {
+        LOCAL,
+        EXTERNAL
+    }
+
     val creationTime = datetime("creationTime").defaultExpression(CurrentDateTime())
+    val type = enumeration("type", Type::class)
+    val administrator = bool("administrator").default(false)
 }
 
 class User(id: EntityID<Int>): IntEntity(id) {
     companion object: IntEntityClass<User>(Users)
-    var creationTime by Users.creationTime
+    var creationTime    by Users.creationTime
+    var type            by Users.type
+    var administrator   by Users.administrator
 }
 
 object LocalUsers: IntIdTable() {
@@ -43,6 +52,6 @@ object ExternalUsers: IntIdTable() {
 
 class ExternalUser(id: EntityID<Int>): IntEntity(id) {
     companion object: IntEntityClass<ExternalUser>(ExternalUsers)
-    var provider by ExternalUsers.provider
-    var providerUserId by ExternalUsers.providerUserId
+    var provider        by ExternalUsers.provider
+    var providerUserId  by ExternalUsers.providerUserId
 }

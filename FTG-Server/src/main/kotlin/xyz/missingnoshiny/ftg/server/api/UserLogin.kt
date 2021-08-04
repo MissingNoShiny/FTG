@@ -1,4 +1,4 @@
-package xyz.missingnoshiny.ftg.server.plugins.auth
+package xyz.missingnoshiny.ftg.server.api
 
 import kotlinx.serialization.Serializable
 

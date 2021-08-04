@@ -7,7 +7,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import xyz.missingnoshiny.ftg.server.api.CreateRoomResponse
+import kotlinx.serialization.Serializable
 import xyz.missingnoshiny.ftg.server.getLeastUsed
 import xyz.missingnoshiny.ftg.server.nodes
 import xyz.missingnoshiny.ftg.server.rooms
@@ -21,6 +21,9 @@ fun Application.configureRouting() {
             call.respond(nodes.filter { it.isReady })
         }
         post("/createRoom") {
+            @Serializable
+            data class CreateRoomResponse(val id: String)
+
             val node = nodes.getLeastUsed() ?: return@post call.respond(HttpStatusCode.InternalServerError)
 
             var id = generateRoomId()
