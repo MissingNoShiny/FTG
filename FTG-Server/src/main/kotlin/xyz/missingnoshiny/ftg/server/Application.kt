@@ -19,8 +19,8 @@ fun main(args: Array<String>): Unit =
 fun Application.module(testing: Boolean = false) {
     DatabaseInitializer
     configureSerialization()
-    configureRouting()
-    configureSockets()
     configureCORS()
     configureAuthentication()
+    configureRouting()
+    configureSockets()
 }

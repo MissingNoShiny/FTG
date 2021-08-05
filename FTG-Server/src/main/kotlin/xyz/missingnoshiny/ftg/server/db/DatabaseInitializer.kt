@@ -10,6 +10,7 @@ import javax.sql.DataSource
 object DatabaseInitializer {
     init {
         Database.connect(getDataSource())
+        createMissingTables()
     }
 
     private fun getDataSource(): DataSource {

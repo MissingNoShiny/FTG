@@ -41,7 +41,7 @@ fun Application.configureAuthentication() {
     }
 
     install(Authentication) {
-        jwt {
+        jwt("auth-jwt") {
             this.realm = realm
             verifier(JWT
                 .require(Algorithm.HMAC256(secret))
@@ -96,8 +96,9 @@ fun Application.configureAuthentication() {
                                 type = Users.Type.EXTERNAL
                             }
                             ExternalUser.new(user.id.value) {
-                                this.provider = ExternalUsers.Provider.valueOf(providerName)
+                                this.provider       = ExternalUsers.Provider.valueOf(providerName)
                                 this.providerUserId = profile.id
+                                this.username       = profile.username
                             }
                         }.id.value
 
@@ -168,6 +169,10 @@ fun Application.configureAuthentication() {
     }
 }
 
-private fun getHash(password: String) = BCrypt.hashpw(password, BCrypt.gensalt()).toByteArray()
+/**
+ * Generates the BCrypt hash for a given string
+ * @return A byte array of size 40
+ */
+private fun getHash(string: String) = BCrypt.hashpw(string, BCrypt.gensalt()).toByteArray()
 
 private fun checkPassword(user: LocalUser, password: String) = user.password contentEquals getHash(password)

@@ -3,9 +3,12 @@ package xyz.missingnoshiny.ftg.server.db
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.`java-time`.CurrentDateTime
 import org.jetbrains.exposed.sql.`java-time`.datetime
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object Users: IntIdTable() {
     enum class Type {
@@ -25,12 +28,12 @@ class User(id: EntityID<Int>): IntEntity(id) {
     var administrator   by Users.administrator
 }
 
-object LocalUsers: IntIdTable() {
+object LocalUsers: IdTable<Int>() {
     override val id = integer("id").entityId().references(Users.id)
+    override val primaryKey = PrimaryKey(id)
+
     val username = varchar("username", 32).uniqueIndex()
     val password = binary("password", 40)
-
-    override val primaryKey = PrimaryKey(id)
 }
 
 class LocalUser(id: EntityID<Int>): IntEntity(id) {
@@ -39,19 +42,33 @@ class LocalUser(id: EntityID<Int>): IntEntity(id) {
     var password by LocalUsers.password
 }
 
-object ExternalUsers: IntIdTable() {
+object ExternalUsers: IdTable<Int>() {
     enum class Provider {
         DISCORD,
         TWITCH
     }
 
     override val id = integer("id").entityId().references(Users.id)
+    override val primaryKey = PrimaryKey(id)
+
     val provider = enumeration("provider", Provider::class)
     val providerUserId = integer("providerUserId")
+    val username = varchar("username", 32)
 }
 
 class ExternalUser(id: EntityID<Int>): IntEntity(id) {
     companion object: IntEntityClass<ExternalUser>(ExternalUsers)
     var provider        by ExternalUsers.provider
     var providerUserId  by ExternalUsers.providerUserId
+    var username        by ExternalUsers.username
+}
+
+fun createMissingTables() {
+    transaction {
+        SchemaUtils.createMissingTablesAndColumns(
+            Users,
+            LocalUsers,
+            ExternalUsers
+        )
+    }
 }

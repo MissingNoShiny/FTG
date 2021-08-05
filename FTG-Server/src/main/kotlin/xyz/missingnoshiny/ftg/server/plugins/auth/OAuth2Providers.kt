@@ -8,6 +8,16 @@ import kotlinx.serialization.json.Json
 
 val appConfig = HoconApplicationConfig(ConfigFactory.load())
 
+@Serializable
+data class DiscordUser(val id: String, val username: String, val avatar: String)
+@Serializable
+data class DiscordResponse(val user: DiscordUser)
+
+@Serializable
+data class TwitchUser(val id: String, val display_name: String, val profile_image_url: String)
+@Serializable
+data class TwitchResponse(val data: List<TwitchUser>)
+
 val OAuth2Providers = listOf(
     OAuth2Provider(
         name = "discord",
@@ -17,11 +27,6 @@ val OAuth2Providers = listOf(
         clientId = appConfig.property("oauth.discord.id").getString(),
         clientSecret = appConfig.property("oauth.discord.secret").getString(),
         profileResponseReader = {
-            @Serializable
-            data class DiscordUser(val id: String, val username: String, val avatar: String)
-            @Serializable
-            data class DiscordResponse(val user: DiscordUser)
-
             val discordResponse = Json { ignoreUnknownKeys = true }.decodeFromString<DiscordResponse>(it)
             val profilePictureUrl = "https://cdn.discordapp.com/avatars/${discordResponse.user.id}/${discordResponse.user.avatar}.jpg"
             OAuth2Provider.Profile(discordResponse.user.id.toInt(), discordResponse.user.username, profilePictureUrl)
@@ -35,11 +40,6 @@ val OAuth2Providers = listOf(
         clientId = appConfig.property("oauth.twitch.id").getString(),
         clientSecret = appConfig.property("oauth.twitch.secret").getString(),
         profileResponseReader = {
-            @Serializable
-            data class TwitchUser(val id: String, val display_name: String, val profile_image_url: String)
-            @Serializable
-            data class TwitchResponse(val data: List<TwitchUser>)
-
             val twitchResponse = Json { ignoreUnknownKeys = true }.decodeFromString<TwitchResponse>(it)
             val twitchUser = twitchResponse.data.single()
             OAuth2Provider.Profile(twitchUser.id.toInt(), twitchUser.display_name, twitchUser.profile_image_url)
