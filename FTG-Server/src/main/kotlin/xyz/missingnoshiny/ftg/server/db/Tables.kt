@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.`java-time`.CurrentDateTime
 import org.jetbrains.exposed.sql.`java-time`.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -21,11 +22,19 @@ object Users: IntIdTable() {
     val administrator = bool("administrator").default(false)
 }
 
+object Follows: Table() {
+    val followingUserId = reference("followingUserId", Users)
+    val followedUserId = reference("followedUserId", Users)
+    override val primaryKey = PrimaryKey(followingUserId, followedUserId)
+}
+
 class User(id: EntityID<Int>): IntEntity(id) {
     companion object: IntEntityClass<User>(Users)
     var creationTime    by Users.creationTime
     var type            by Users.type
     var administrator   by Users.administrator
+    var followedBy      by User.via(Follows.followedUserId, Follows.followingUserId)
+    var following       by User.via(Follows.followingUserId, Follows.followedUserId)
 }
 
 object LocalUsers: IdTable<Int>() {

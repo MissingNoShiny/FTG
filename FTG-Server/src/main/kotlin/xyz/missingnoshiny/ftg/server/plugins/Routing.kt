@@ -9,14 +9,9 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.transactions.transaction
 import xyz.missingnoshiny.ftg.server.api.CreateRoomResponse
-import xyz.missingnoshiny.ftg.server.api.UserInfo
-import xyz.missingnoshiny.ftg.server.db.ExternalUser
-import xyz.missingnoshiny.ftg.server.db.LocalUser
-import xyz.missingnoshiny.ftg.server.db.User
-import xyz.missingnoshiny.ftg.server.db.Users
+import xyz.missingnoshiny.ftg.server.db.*
 import xyz.missingnoshiny.ftg.server.getLeastUsed
 import xyz.missingnoshiny.ftg.server.nodes
 import xyz.missingnoshiny.ftg.server.rooms
@@ -57,22 +52,6 @@ fun Application.configureRouting() {
 
         route("/userinfo") {
 
-            fun getUserInfos(user: User): UserInfo = when (user.type) {
-                Users.Type.LOCAL -> {
-                    val localUser = transaction {
-                        LocalUser[user.id]
-                    }
-                    UserInfo(localUser.username, user.type)
-                }
-                Users.Type.EXTERNAL -> {
-                    val externalUser = transaction {
-                        ExternalUser[user.id]
-                    }
-                    UserInfo(externalUser.username, user.type)
-                }
-            }
-
-
             // Get info of authenticated user
             authenticate("auth-jwt") {
                 get {
@@ -82,7 +61,7 @@ fun Application.configureRouting() {
                     val user = transaction {
                         User.findById(id)
                     } ?: return@get call.respond(HttpStatusCode.NotFound)
-                    call.respond(HttpStatusCode.OK, getUserInfos(user))
+                    call.respond(HttpStatusCode.OK, UserService.getUserInfos(user))
                 }
             }
 
@@ -92,7 +71,7 @@ fun Application.configureRouting() {
                 val user = transaction {
                     User.findById(call.parameters["id"]!!.toInt())
                 } ?: return@get call.respond(HttpStatusCode.NotFound)
-                call.respond(HttpStatusCode.OK, getUserInfos(user))
+                call.respond(HttpStatusCode.OK, UserService.getUserInfos(user))
             }
         }
     }
