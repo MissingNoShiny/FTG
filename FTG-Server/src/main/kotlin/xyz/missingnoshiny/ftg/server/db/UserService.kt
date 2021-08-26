@@ -26,5 +26,7 @@ class UserService {
         fun findById(id: Int) = transaction {
             User.findById(id)
         }
+
+        fun getUsernameFromId(id: Int) = findById(id)
     }
 }

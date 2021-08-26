@@ -12,6 +12,8 @@ import xyz.missingnoshiny.ftg.core.events.EmptyContext
 import xyz.missingnoshiny.ftg.core.events.WebsocketSessionEventHandler
 import xyz.missingnoshiny.ftg.node.events.NodeHeartbeatEvent
 import xyz.missingnoshiny.ftg.node.events.NodeReadyEvent
+import xyz.missingnoshiny.ftg.node.games.Room
+import xyz.missingnoshiny.ftg.node.plugins.configureAuthentication
 import xyz.missingnoshiny.ftg.node.plugins.configureCORS
 import xyz.missingnoshiny.ftg.node.plugins.configureRouting
 import xyz.missingnoshiny.ftg.node.plugins.configureSerialization
@@ -28,6 +30,7 @@ fun main(args: Array<String>): Unit =
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
     configureSerialization()
+    configureAuthentication()
     configureRouting()
     configureCORS()
 }

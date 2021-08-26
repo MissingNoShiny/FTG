@@ -18,31 +18,31 @@ import xyz.missingnoshiny.ftg.server.api.UserLogin
 import xyz.missingnoshiny.ftg.server.db.*
 import java.time.Instant
 import java.util.*
+import javax.print.attribute.standard.JobOriginatingUserName
 
 fun Application.configureAuthentication() {
 
     /**
      * JWT config
      */
-    val realm = environment.config.property("jwt.realm").getString()
     val secret = environment.config.property("jwt.secret").getString()
     val audience = environment.config.property("jwt.audience").getString()
     val duration = environment.config.property("jwt.duration_ms").getString().toInt()
 
-    fun generateJWTToken(userId: Int) = JWT.create()
+    fun generateJWTToken(id: Int, username:String) = JWT.create()
         .withAudience(audience)
-        .withSubject(userId.toString())
+        .withSubject(id.toString())
+        .withClaim("username", username)
         .withExpiresAt(Date(System.currentTimeMillis() + duration))
         .sign(Algorithm.HMAC256(secret))
 
-    fun ResponseCookies.addJWTToken(id: Int) {
-        val token = generateJWTToken(id)
-        append("token", token, httpOnly = true, secure = true)
+    fun ResponseCookies.addJWTToken(id: Int, username: String) {
+        val token = generateJWTToken(id, username)
+        append("token", token, httpOnly = true, secure = false)
     }
 
     install(Authentication) {
         jwt("auth-jwt") {
-            this.realm = realm
             verifier(JWT
                 .require(Algorithm.HMAC256(secret))
                 .withAudience(audience)
@@ -91,7 +91,7 @@ fun Application.configureAuthentication() {
 
                     // If user doesn't exist, create it and log in
                     if (result.empty()) {
-                        val insertedId = transaction {
+                        val user = transaction {
                             val user = User.new {
                                 type = Users.Type.EXTERNAL
                             }
@@ -100,15 +100,15 @@ fun Application.configureAuthentication() {
                                 this.providerUserId = profile.id
                                 this.username       = profile.username
                             }
-                        }.id.value
+                        }
 
-                        call.response.cookies.addJWTToken(insertedId)
+                        call.response.cookies.addJWTToken(user.id.value, user.username)
                         return@post call.respond(HttpStatusCode.Created)
                     }
 
                     // Else, get user and log in
                     val externalUser = result.single()
-                    call.response.cookies.addJWTToken(externalUser.id.value)
+                    call.response.cookies.addJWTToken(externalUser.id.value, externalUser.username)
                     call.respond(HttpStatusCode.OK)
                 }
             }
@@ -124,7 +124,7 @@ fun Application.configureAuthentication() {
                 }
 
                 if (checkPassword(localUser, login.password)) {
-                    call.response.cookies.addJWTToken(localUser.id.value)
+                    call.response.cookies.addJWTToken(localUser.id.value, localUser.username)
                     call.respond(HttpStatusCode.OK)
                 } else {
                     call.respond(HttpStatusCode.Unauthorized)
@@ -140,7 +140,7 @@ fun Application.configureAuthentication() {
                     return@post call.respond(HttpStatusCode.BadRequest, violations)
                 }
 
-                val insertedId = transaction {
+                val user = transaction {
                     val user = User.new {
                         type = Users.Type.LOCAL
                     }
@@ -148,9 +148,9 @@ fun Application.configureAuthentication() {
                         username = body.username
                         password = getHash(body.password)
                     }
-                }.id.value
+                }
 
-                call.response.cookies.addJWTToken(insertedId)
+                call.response.cookies.addJWTToken(user.id.value, user.username)
                 call.respond(HttpStatusCode.Created)
             }
         }
@@ -164,7 +164,10 @@ fun Application.configureAuthentication() {
 
             if (expireTime.isBefore(Instant.now())) return@intercept
 
-            context.response.cookies.addJWTToken(payload.subject.toInt())
+            val id = payload.subject.toInt()
+            val username = payload.getClaim("username").asString()
+
+            context.response.cookies.addJWTToken(id, username)
         }
     }
 }

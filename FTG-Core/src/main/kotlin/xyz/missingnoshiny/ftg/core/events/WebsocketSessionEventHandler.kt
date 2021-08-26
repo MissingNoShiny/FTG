@@ -12,6 +12,8 @@ class WebsocketSessionEventHandler(private val context: EventContext, private va
 
     fun registerIncomingEvent(eventClass: KClass<out IncomingEvent>) = eventMap.put(eventClass.simpleName.toString(), eventClass)
 
+    fun deregisterIncomingEvent(eventClass: KClass<out IncomingEvent>) = eventMap.remove(eventClass.simpleName.toString())
+
     suspend fun emitEvent(outgoingEvent: OutgoingEvent) {
         val data = "${outgoingEvent::class.simpleName.toString()}|${Json { encodeDefaults = true }.encodeToString(serializer(outgoingEvent::class.createType()), outgoingEvent)}"
         session.send(data)

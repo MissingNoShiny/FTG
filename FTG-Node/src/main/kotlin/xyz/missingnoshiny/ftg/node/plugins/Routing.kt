@@ -5,7 +5,7 @@ import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.coroutines.launch
-import xyz.missingnoshiny.ftg.node.Room
+import xyz.missingnoshiny.ftg.node.games.Room
 import xyz.missingnoshiny.ftg.node.rooms
 
 fun Application.configureRouting() {
