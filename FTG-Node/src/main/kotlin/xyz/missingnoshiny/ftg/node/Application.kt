@@ -54,8 +54,8 @@ fun Application.test() {
 
             while (true) {
                 if (!serverConnectionHandler!!.connected) break
-                serverConnectionHandler!!.emitEvent(NodeHeartbeatEvent(rooms.size))
-                println("Ok $rooms")
+                serverConnectionHandler!!.emitEvent(NodeHeartbeatEvent(rooms.mapValues { it.value.users.map { user -> user.id }}))
+                println("Ok ${rooms.size}")
                 delay(5000)
             }
         }

@@ -7,7 +7,7 @@ import kotlin.time.ExperimentalTime
 
 @Serializable
 class Node {
-    var roomCount = 0
+    var rooms: MutableMap<String, List<Int>> = mutableMapOf()
     var apiAddress: String? = null
     var lastHeartBeat: Instant = Instant.DISTANT_PAST
 
@@ -22,5 +22,5 @@ class Node {
         get() = lastHeartBeat.minus(Clock.System.now()).inWholeSeconds < 10
 
     val weight: Int
-        get() = roomCount
+        get() = rooms.size
 }

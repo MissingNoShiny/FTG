@@ -42,6 +42,7 @@ fun Application.configureRouting() {
                 method = HttpMethod.Post
             }
             if (response.status != HttpStatusCode.Created) return@post call.respond(HttpStatusCode.InternalServerError)
+            rooms[id] = node
             call.respond(HttpStatusCode.Created, CreateRoomResponse(id))
         }
         get("/room/{id}") {

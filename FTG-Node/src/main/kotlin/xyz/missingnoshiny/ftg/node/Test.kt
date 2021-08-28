@@ -14,7 +14,11 @@ import xyz.missingnoshiny.ftg.node.games.util.Dictionary
 import java.io.File
 
 fun main() {
-    val d = Dictionary.fromFile(File("dictionary.txt")) { true }
-    val p = d.getLetterFrequencies()
+    /*
+        val d = Dictionary.fromFile(File("dictionary.txt")) { true }
+        val p = d.getLetterFrequencies()
+     */
+    val n = "184023294956011520".toInt()
+    println(n)
 
 }

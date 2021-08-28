@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.`java-time`.CurrentDateTime
 import org.jetbrains.exposed.sql.`java-time`.datetime
 import org.jetbrains.exposed.sql.transactions.transaction
+import xyz.missingnoshiny.ftg.server.plugins.auth.getHash
 
 object Users: IntIdTable() {
     enum class Type {
@@ -17,14 +18,14 @@ object Users: IntIdTable() {
         EXTERNAL
     }
 
-    val creationTime = datetime("creationTime").defaultExpression(CurrentDateTime())
-    val type = enumeration("type", Type::class)
-    val administrator = bool("administrator").default(false)
+    val creationTime    = datetime("creationTime").defaultExpression(CurrentDateTime())
+    val type            = enumeration("type", Type::class)
+    val administrator   = bool("administrator").default(false)
 }
 
 object Follows: Table() {
-    val followingUserId = reference("followingUserId", Users)
-    val followedUserId = reference("followedUserId", Users)
+    val followingUserId     = reference("followingUserId", Users)
+    val followedUserId      = reference("followedUserId", Users)
     override val primaryKey = PrimaryKey(followingUserId, followedUserId)
 }
 
@@ -41,14 +42,18 @@ object LocalUsers: IdTable<Int>() {
     override val id = integer("id").entityId().references(Users.id)
     override val primaryKey = PrimaryKey(id)
 
-    val username = varchar("username", 32).uniqueIndex()
-    val password = binary("password", 40)
+    val username        = varchar("username", 32).uniqueIndex()
+    val password        = binary("password", 40)
+    val recoveryToken   = binary("recoveryToken", 40)
 }
 
 class LocalUser(id: EntityID<Int>): IntEntity(id) {
     companion object: IntEntityClass<LocalUser>(LocalUsers)
-    var username by LocalUsers.username
-    var password by LocalUsers.password
+    var username        by LocalUsers.username
+    var password        by LocalUsers.password
+    var recoveryToken   by LocalUsers.recoveryToken
+
+    fun checkPassword(password: String) = this.password contentEquals getHash(password)
 }
 
 object ExternalUsers: IdTable<Int>() {
@@ -60,9 +65,9 @@ object ExternalUsers: IdTable<Int>() {
     override val id = integer("id").entityId().references(Users.id)
     override val primaryKey = PrimaryKey(id)
 
-    val provider = enumeration("provider", Provider::class)
-    val providerUserId = integer("providerUserId")
-    val username = varchar("username", 32)
+    val provider        = enumeration("provider", Provider::class)
+    val providerUserId  = varchar("providerUserId", 32)
+    val username        = varchar("username", 32)
 }
 
 class ExternalUser(id: EntityID<Int>): IntEntity(id) {
@@ -77,7 +82,8 @@ fun createMissingTables() {
         SchemaUtils.createMissingTablesAndColumns(
             Users,
             LocalUsers,
-            ExternalUsers
+            ExternalUsers,
+            Follows
         )
     }
 }

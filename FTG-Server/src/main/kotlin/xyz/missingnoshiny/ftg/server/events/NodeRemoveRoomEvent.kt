@@ -8,7 +8,7 @@ import xyz.missingnoshiny.ftg.server.rooms
 
 @Serializable
 class NodeRemoveRoomEvent(override val timestamp: Instant, val id: String): IncomingEvent() {
-    override fun invoke(context: EventContext) {
+    override suspend fun invoke(context: EventContext) {
         rooms.remove(id)
     }
 

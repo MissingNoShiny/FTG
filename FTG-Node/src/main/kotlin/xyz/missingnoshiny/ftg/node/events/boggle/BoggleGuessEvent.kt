@@ -9,7 +9,7 @@ import xyz.missingnoshiny.ftg.node.games.boggle.BoggleGame
 
 @Serializable
 data class BoggleGuessEvent(override val timestamp: Instant, val guess: String): IncomingEvent() {
-    override fun invoke(context: EventContext) {
+    override suspend fun invoke(context: EventContext) {
         (context as GameRoomContext).let {
             if (it.room.game != null || it.room.game !is BoggleGame) return
             val game = it.room.game as BoggleGame

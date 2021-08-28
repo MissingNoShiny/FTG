@@ -13,6 +13,7 @@ import io.ktor.routing.*
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
+import xyz.missingnoshiny.ftg.server.api.AuthorizationCodeBody
 import xyz.missingnoshiny.ftg.server.api.SignupRequest
 import xyz.missingnoshiny.ftg.server.api.UserLogin
 import xyz.missingnoshiny.ftg.server.db.*
@@ -75,28 +76,31 @@ fun Application.configureAuthentication() {
         route("/login") {
             for ((providerName, provider) in OAuth2Providers) {
                 post("/$providerName") {
-                    val authorizationCode = call.receiveOrNull<String>() ?: return@post call.respond(HttpStatusCode.BadRequest)
+                    val authorizationCode = call.receiveOrNull<AuthorizationCodeBody>()?.code ?: return@post call.respond(HttpStatusCode.BadRequest)
 
                     // Get external info
                     val profile = kotlin.runCatching {
                         provider.getUserProfile(authorizationCode)
                     }.getOrElse {
+                        it.printStackTrace()
                         return@post call.respond(HttpStatusCode.BadRequest)
                     }
 
                     // Get user from info
-                    val result = ExternalUser.find {
-                        ExternalUsers.providerUserId eq profile.id and (ExternalUsers.provider eq ExternalUsers.Provider.valueOf(providerName))
+                    val result = transaction {
+                        ExternalUser.find {
+                            ExternalUsers.providerUserId eq profile.id and (ExternalUsers.provider eq ExternalUsers.Provider.valueOf(providerName.uppercase()))
+                        }.toList()
                     }
 
                     // If user doesn't exist, create it and log in
-                    if (result.empty()) {
+                    if (result.isEmpty()) {
                         val user = transaction {
                             val user = User.new {
                                 type = Users.Type.EXTERNAL
                             }
                             ExternalUser.new(user.id.value) {
-                                this.provider       = ExternalUsers.Provider.valueOf(providerName)
+                                this.provider       = ExternalUsers.Provider.valueOf(providerName.uppercase())
                                 this.providerUserId = profile.id
                                 this.username       = profile.username
                             }
@@ -123,7 +127,7 @@ fun Application.configureAuthentication() {
                     return@post call.respond(HttpStatusCode.Unauthorized)
                 }
 
-                if (checkPassword(localUser, login.password)) {
+                if (localUser.checkPassword(login.password)) {
                     call.response.cookies.addJWTToken(localUser.id.value, localUser.username)
                     call.respond(HttpStatusCode.OK)
                 } else {
@@ -153,6 +157,23 @@ fun Application.configureAuthentication() {
                 call.response.cookies.addJWTToken(user.id.value, user.username)
                 call.respond(HttpStatusCode.Created)
             }
+
+            authenticate("auth-jwt") {
+
+                //Generate recovery token
+                get("/generateRecoveryToken") {
+                    val principal = call.principal<JWTPrincipal>()
+                    val id = principal!!.subject?.toInt() ?: return@get call.respond(HttpStatusCode.Unauthorized)
+                    val user = transaction {
+                        User.findById(id)
+                    } ?: return@get call.respond(HttpStatusCode.InternalServerError)
+                    if (user.type != Users.Type.LOCAL) return@get call.respond(HttpStatusCode.BadRequest)
+
+                    val recoveryToken = UUID.randomUUID().toString()
+                    val hash = getHash(recoveryToken)
+                    //TODO
+                }
+            }
         }
 
 
@@ -176,6 +197,4 @@ fun Application.configureAuthentication() {
  * Generates the BCrypt hash for a given string
  * @return A byte array of size 40
  */
-private fun getHash(string: String) = BCrypt.hashpw(string, BCrypt.gensalt()).toByteArray()
-
-private fun checkPassword(user: LocalUser, password: String) = user.password contentEquals getHash(password)
+fun getHash(string: String) = BCrypt.hashpw(string, BCrypt.gensalt()).toByteArray()

@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 abstract class IncomingEvent: Event() {
-    abstract fun invoke(context: EventContext)
+    abstract suspend fun invoke(context: EventContext)
 }

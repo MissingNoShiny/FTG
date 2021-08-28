@@ -12,7 +12,6 @@ fun Application.configureAuthentication() {
     /**
      * JWT config
      */
-    val realm = environment.config.property("jwt.realm").getString()
     val secret = environment.config.property("jwt.secret").getString()
     val audience = environment.config.property("jwt.audience").getString()
 

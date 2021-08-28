@@ -4,4 +4,4 @@ import kotlinx.serialization.Serializable
 import xyz.missingnoshiny.ftg.core.events.OutgoingEvent
 
 @Serializable
-data class NodeHeartbeatEvent(val roomCount: Int): OutgoingEvent()
+data class NodeHeartbeatEvent(val rooms: Map<String, List<Int>>): OutgoingEvent()
