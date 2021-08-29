@@ -30,15 +30,16 @@ fun Application.configureAuthentication() {
     val audience = environment.config.property("jwt.audience").getString()
     val duration = environment.config.property("jwt.duration_ms").getString().toInt()
 
-    fun generateJWTToken(id: Int, username:String) = JWT.create()
+    fun generateJWTToken(id: Int, username:String, administrator: Boolean) = JWT.create()
         .withAudience(audience)
         .withSubject(id.toString())
         .withClaim("username", username)
+        .withClaim("administrator", administrator)
         .withExpiresAt(Date(System.currentTimeMillis() + duration))
         .sign(Algorithm.HMAC256(secret))
 
-    fun ResponseCookies.addJWTToken(id: Int, username: String) {
-        val token = generateJWTToken(id, username)
+    fun ResponseCookies.addJWTToken(id: Int, username: String, administrator: Boolean) {
+        val token = generateJWTToken(id, username, administrator)
         append("token", token, httpOnly = true, secure = false)
     }
 
@@ -96,9 +97,11 @@ fun Application.configureAuthentication() {
                     // If user doesn't exist, create it and log in
                     if (result.isEmpty()) {
                         val user = transaction {
-                            val user = User.new {
+                            User.new {
                                 type = Users.Type.EXTERNAL
                             }
+                        }
+                        val externalUser = transaction {
                             ExternalUser.new(user.id.value) {
                                 this.provider       = ExternalUsers.Provider.valueOf(providerName.uppercase())
                                 this.providerUserId = profile.id
@@ -106,13 +109,13 @@ fun Application.configureAuthentication() {
                             }
                         }
 
-                        call.response.cookies.addJWTToken(user.id.value, user.username)
+                        call.response.cookies.addJWTToken(user.id.value, externalUser.username, user.administrator)
                         return@post call.respond(HttpStatusCode.Created)
                     }
 
                     // Else, get user and log in
                     val externalUser = result.single()
-                    call.response.cookies.addJWTToken(externalUser.id.value, externalUser.username)
+                    call.response.cookies.addJWTToken(externalUser.id.value, externalUser.username, UserService.isAdministrator(externalUser.id.value)!!)
                     call.respond(HttpStatusCode.OK)
                 }
             }
@@ -120,59 +123,64 @@ fun Application.configureAuthentication() {
             // Authenticate local user
             post("/local") {
                 val login = call.receiveOrNull<UserLogin>() ?: return@post call.respond(HttpStatusCode.BadRequest)
-                
+                println(login)
+
                 val localUser = try {
-                    LocalUser.find { LocalUsers.username eq login.username }.single()
+                    transaction {
+                        LocalUser.find { LocalUsers.username eq login.username }.single()
+                    }
                 } catch (e: Exception) {
-                    return@post call.respond(HttpStatusCode.Unauthorized)
+                    return@post call.respond(HttpStatusCode.Unauthorized, "Ce compte n'existe pas.")
                 }
 
                 if (localUser.checkPassword(login.password)) {
-                    call.response.cookies.addJWTToken(localUser.id.value, localUser.username)
+                    call.response.cookies.addJWTToken(localUser.id.value, localUser.username, UserService.isAdministrator(localUser.id.value)!!)
                     call.respond(HttpStatusCode.OK)
                 } else {
-                    call.respond(HttpStatusCode.Unauthorized)
+                    call.respond(HttpStatusCode.Unauthorized, "Mot de passe incorrect.")
+                }
+            }
+        }
+
+        // Create local user and authenticate it
+        post("/signup") {
+            val body = call.receiveOrNull<SignupRequest>() ?: return@post call.respond(HttpStatusCode.BadRequest)
+            val violations = DataValidator.validateSignupRequest(body)
+
+            if (violations.isNotEmpty()) {
+                return@post call.respond(HttpStatusCode.BadRequest, violations)
+            }
+
+            val user = transaction {
+                User.new {
+                    type = Users.Type.LOCAL
+                }
+            }
+            val localUser = transaction {
+                LocalUser.new(user.id.value) {
+                    username = body.username
+                    password = getHash(body.password)
                 }
             }
 
-            // Create local user and authenticate it
-            post("/signup") {
-                val body = call.receiveOrNull<SignupRequest>() ?: return@post call.respond(HttpStatusCode.BadRequest)
-                val violations = DataValidator.validateSignupRequest(body)
+            call.response.cookies.addJWTToken(user.id.value, localUser.username, user.administrator)
+            call.respond(HttpStatusCode.Created)
+        }
 
-                if (violations.isNotEmpty()) {
-                    return@post call.respond(HttpStatusCode.BadRequest, violations)
-                }
+        authenticate("auth-jwt") {
 
+            //Generate recovery token
+            get("/generateRecoveryToken") {
+                val principal = call.principal<JWTPrincipal>()
+                val id = principal!!.subject?.toInt() ?: return@get call.respond(HttpStatusCode.Unauthorized)
                 val user = transaction {
-                    val user = User.new {
-                        type = Users.Type.LOCAL
-                    }
-                    LocalUser.new(user.id.value) {
-                        username = body.username
-                        password = getHash(body.password)
-                    }
-                }
+                    User.findById(id)
+                } ?: return@get call.respond(HttpStatusCode.InternalServerError)
+                if (user.type != Users.Type.LOCAL) return@get call.respond(HttpStatusCode.BadRequest)
 
-                call.response.cookies.addJWTToken(user.id.value, user.username)
-                call.respond(HttpStatusCode.Created)
-            }
-
-            authenticate("auth-jwt") {
-
-                //Generate recovery token
-                get("/generateRecoveryToken") {
-                    val principal = call.principal<JWTPrincipal>()
-                    val id = principal!!.subject?.toInt() ?: return@get call.respond(HttpStatusCode.Unauthorized)
-                    val user = transaction {
-                        User.findById(id)
-                    } ?: return@get call.respond(HttpStatusCode.InternalServerError)
-                    if (user.type != Users.Type.LOCAL) return@get call.respond(HttpStatusCode.BadRequest)
-
-                    val recoveryToken = UUID.randomUUID().toString()
-                    val hash = getHash(recoveryToken)
-                    //TODO
-                }
+                val recoveryToken = UUID.randomUUID().toString()
+                val hash = getHash(recoveryToken)
+                //TODO
             }
         }
 
@@ -187,8 +195,9 @@ fun Application.configureAuthentication() {
 
             val id = payload.subject.toInt()
             val username = payload.getClaim("username").asString()
+            val administrator = payload.getClaim("administrator").asBoolean()
 
-            context.response.cookies.addJWTToken(id, username)
+            context.response.cookies.addJWTToken(id, username, administrator)
         }
     }
 }

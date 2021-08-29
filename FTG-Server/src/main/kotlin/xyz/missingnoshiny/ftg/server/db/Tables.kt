@@ -44,7 +44,7 @@ object LocalUsers: IdTable<Int>() {
 
     val username        = varchar("username", 32).uniqueIndex()
     val password        = binary("password", 40)
-    val recoveryToken   = binary("recoveryToken", 40)
+    val recoveryToken   = binary("recoveryToken", 40).nullable()
 }
 
 class LocalUser(id: EntityID<Int>): IntEntity(id) {

@@ -1,6 +1,7 @@
 package xyz.missingnoshiny.ftg.server.db
 
 import kotlinx.serialization.Serializable
+import org.jetbrains.exposed.sql.transactions.transaction
 import xyz.missingnoshiny.ftg.server.api.SignupRequest
 
 
@@ -15,9 +16,9 @@ class DataValidator private constructor() {
 
             // Length constraints
             if (username.length < 2) {
-                violations.add(ConstraintViolation("Username must contain at least 2 characters"))
+                violations.add(ConstraintViolation("Le nom d'utilisateur doit comporter au moins 2 caractères."))
             } else if (username.length > 32) {
-                violations.add(ConstraintViolation("Username must contain at most 32 characters"))
+                violations.add(ConstraintViolation("Le nom d'utilisateur doit comporter au plus 32 caractères."))
             }
 
             return violations
@@ -26,8 +27,10 @@ class DataValidator private constructor() {
         private fun validateLocalUsername(username: String): MutableList<ConstraintViolation> {
             val violations = validateUsername(username)
 
-            if (!LocalUser.find { LocalUsers.username eq username }.empty()) {
-                violations.add(ConstraintViolation("Username already exists among local users"))
+            transaction {
+                if (!LocalUser.find { LocalUsers.username eq username }.empty()) {
+                    violations.add(ConstraintViolation("Ce nom d'utilisateur est déjà pris par un compte local."))
+                }
             }
 
             return violations
@@ -38,22 +41,22 @@ class DataValidator private constructor() {
 
             // Length constraints
             if (password.length < 12) {
-                violations.add(ConstraintViolation("Password must contain at least 12 characters"))
+                violations.add(ConstraintViolation("Le mot de passe doit contenir au moins 12 caractères."))
             } else if (password.length > 100) {
-                violations.add(ConstraintViolation("Password must contain at most 100 characters"))
+                violations.add(ConstraintViolation("Le mot de passe doit contenir au plus 12 caractères."))
             }
 
             // At least one lowercase letter
             if (!Regex("[a-z]").containsMatchIn(password)) {
-                violations.add(ConstraintViolation("Password must contain at least one lowercase letter"))
+                violations.add(ConstraintViolation("Le mot de passe doit contenir une lettre minuscule."))
             }
             // At least one uppercase letter
             if (!Regex("[A-Z]").containsMatchIn(password)) {
-                violations.add(ConstraintViolation("Password must contain at least one uppercase letter"))
+                violations.add(ConstraintViolation("Le mot de passe doit contenir une lettre majuscule."))
             }
             // At least one digit
             if (!password.any { it.isDigit() }) {
-                violations.add(ConstraintViolation("Password must contain at least one digit"))
+                violations.add(ConstraintViolation("Le mot de passe doit contenir un chiffre."))
             }
 
             return violations
