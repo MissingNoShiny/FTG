@@ -3,17 +3,15 @@ package xyz.missingnoshiny.ftg.server
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+import xyz.missingnoshiny.ftg.core.RoomSerializable
 import kotlin.time.ExperimentalTime
 
 @Serializable
 class Node {
-    var rooms: MutableMap<String, List<Int>> = mutableMapOf()
+    var rooms: MutableMap<String, RoomSerializable> = mutableMapOf()
     var apiAddress: String? = null
     var lastHeartBeat: Instant = Instant.DISTANT_PAST
 
-    /**
-     *
-     */
     val isReady: Boolean
         get() = apiAddress != null
 

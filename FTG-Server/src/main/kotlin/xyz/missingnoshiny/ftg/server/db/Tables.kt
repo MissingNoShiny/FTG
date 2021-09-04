@@ -5,6 +5,7 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.`java-time`.CurrentDateTime
@@ -24,8 +25,8 @@ object Users: IntIdTable() {
 }
 
 object Follows: Table() {
-    val followingUserId     = reference("followingUserId", Users)
-    val followedUserId      = reference("followedUserId", Users)
+    val followingUserId     = reference("followingUserId", Users, onDelete = ReferenceOption.CASCADE)
+    val followedUserId      = reference("followedUserId", Users, onDelete = ReferenceOption.CASCADE)
     override val primaryKey = PrimaryKey(followingUserId, followedUserId)
 }
 
@@ -39,12 +40,12 @@ class User(id: EntityID<Int>): IntEntity(id) {
 }
 
 object LocalUsers: IdTable<Int>() {
-    override val id = integer("id").entityId().references(Users.id)
+    override val id = integer("id").entityId().references(Users.id, onDelete = ReferenceOption.CASCADE)
     override val primaryKey = PrimaryKey(id)
 
     val username        = varchar("username", 32).uniqueIndex()
-    val password        = binary("password", 40)
-    val recoveryToken   = binary("recoveryToken", 40).nullable()
+    val password        = varchar("password", 60)
+    val recoveryToken   = varchar("recoveryToken", 60).nullable()
 }
 
 class LocalUser(id: EntityID<Int>): IntEntity(id) {
@@ -52,8 +53,6 @@ class LocalUser(id: EntityID<Int>): IntEntity(id) {
     var username        by LocalUsers.username
     var password        by LocalUsers.password
     var recoveryToken   by LocalUsers.recoveryToken
-
-    fun checkPassword(password: String) = this.password contentEquals getHash(password)
 }
 
 object ExternalUsers: IdTable<Int>() {
@@ -62,12 +61,16 @@ object ExternalUsers: IdTable<Int>() {
         TWITCH
     }
 
-    override val id = integer("id").entityId().references(Users.id)
+    override val id = integer("id").entityId().references(Users.id, onDelete = ReferenceOption.CASCADE)
     override val primaryKey = PrimaryKey(id)
 
     val provider        = enumeration("provider", Provider::class)
     val providerUserId  = varchar("providerUserId", 32)
     val username        = varchar("username", 32)
+
+    init {
+        index(true, provider, providerUserId)
+    }
 }
 
 class ExternalUser(id: EntityID<Int>): IntEntity(id) {

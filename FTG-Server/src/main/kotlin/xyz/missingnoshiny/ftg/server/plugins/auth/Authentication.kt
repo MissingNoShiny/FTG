@@ -40,7 +40,11 @@ fun Application.configureAuthentication() {
 
     fun ResponseCookies.addJWTToken(id: Int, username: String, administrator: Boolean) {
         val token = generateJWTToken(id, username, administrator)
-        append("token", token, httpOnly = true, secure = false)
+        append("token", token, httpOnly = true, secure = true, domain = "schnaps.fun", path = "/")
+    }
+
+    fun ResponseCookies.removeJWTToken() {
+        append("token", "", httpOnly = true, secure = true, domain = "schnaps.fun", path = "/")
     }
 
     install(Authentication) {
@@ -51,11 +55,7 @@ fun Application.configureAuthentication() {
                 .build())
 
             validate { jwtCredential ->
-                if (User.findById(jwtCredential.payload.subject.toInt()) != null) {
-                    JWTPrincipal(jwtCredential.payload)
-                } else {
-                    null
-                }
+                JWTPrincipal(jwtCredential.payload)
             }
 
             // Retrieve token from httponly cookie instead ot header to prevent XSS attacks
@@ -108,8 +108,10 @@ fun Application.configureAuthentication() {
                                 this.username       = profile.username
                             }
                         }
+                        transaction {
+                            call.response.cookies.addJWTToken(user.id.value, externalUser.username, user.administrator)
+                        }
 
-                        call.response.cookies.addJWTToken(user.id.value, externalUser.username, user.administrator)
                         return@post call.respond(HttpStatusCode.Created)
                     }
 
@@ -132,8 +134,7 @@ fun Application.configureAuthentication() {
                 } catch (e: Exception) {
                     return@post call.respond(HttpStatusCode.Unauthorized, "Ce compte n'existe pas.")
                 }
-
-                if (localUser.checkPassword(login.password)) {
+                if (checkHash(login.password, localUser.password)) {
                     call.response.cookies.addJWTToken(localUser.id.value, localUser.username, UserService.isAdministrator(localUser.id.value)!!)
                     call.respond(HttpStatusCode.OK)
                 } else {
@@ -142,7 +143,7 @@ fun Application.configureAuthentication() {
             }
         }
 
-        // Create local user and authenticate it
+        // Create local user and authenticate them
         post("/signup") {
             val body = call.receiveOrNull<SignupRequest>() ?: return@post call.respond(HttpStatusCode.BadRequest)
             val violations = DataValidator.validateSignupRequest(body)
@@ -162,14 +163,15 @@ fun Application.configureAuthentication() {
                     password = getHash(body.password)
                 }
             }
-
-            call.response.cookies.addJWTToken(user.id.value, localUser.username, user.administrator)
+            transaction {
+                call.response.cookies.addJWTToken(user.id.value, localUser.username, user.administrator)
+            }
             call.respond(HttpStatusCode.Created)
         }
 
         authenticate("auth-jwt") {
 
-            //Generate recovery token
+            // Generate recovery token
             get("/generateRecoveryToken") {
                 val principal = call.principal<JWTPrincipal>()
                 val id = principal!!.subject?.toInt() ?: return@get call.respond(HttpStatusCode.Unauthorized)
@@ -181,6 +183,12 @@ fun Application.configureAuthentication() {
                 val recoveryToken = UUID.randomUUID().toString()
                 val hash = getHash(recoveryToken)
                 //TODO
+            }
+
+            // Disconnect
+            delete("/disconnect") {
+                call.response.cookies.removeJWTToken()
+                call.respond(HttpStatusCode.OK)
             }
         }
 
@@ -204,6 +212,8 @@ fun Application.configureAuthentication() {
 
 /**
  * Generates the BCrypt hash for a given string
- * @return A byte array of size 40
+ * @return A byte array of size 60
  */
-fun getHash(string: String) = BCrypt.hashpw(string, BCrypt.gensalt()).toByteArray()
+fun getHash(string: String): String = BCrypt.hashpw(string, BCrypt.gensalt())
+
+fun checkHash(string: String, hash: String) = BCrypt.checkpw(string, hash)

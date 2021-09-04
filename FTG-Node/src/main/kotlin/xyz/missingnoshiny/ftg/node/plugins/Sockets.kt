@@ -21,16 +21,24 @@ fun Application.configureSockets() {
     routing {
         authenticate("auth-jwt") {
             webSocket("/room/{id}") {
+                println("Player")
                 val principal = call.principal<JWTPrincipal>()!!
 
                 val id = call.parameters["id"]!!
+                println(id)
+
                 if (id !in rooms) return@webSocket this.close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Invalid room id"))
                 val room = rooms[id]!!
-                val user = User(principal.subject!!.toInt(), principal.payload.getClaim("username").asString(), room, this)
+
+                val username = principal.payload.getClaim("username").asString()
+                val administrator = principal.payload.getClaim("administrator").asBoolean()
+                val user = User(principal.subject!!.toInt(), username, administrator, room, this)
 
                 room.addUser(user)
+                println("Added to room")
                 user.handler.handleIncomingEvents()
                 room.removeUser(user)
+                println("Removed from room")
             }
         }
     }

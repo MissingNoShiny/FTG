@@ -1,11 +1,12 @@
 package xyz.missingnoshiny.ftg.server.db
 
 import kotlinx.serialization.Serializable
+import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class UserService {
     @Serializable
-    data class UserInfo(val username: String, val type: Users.Type, val administrator: Boolean)
+    data class UserInfo(val id: Int, val username: String, val administrator: Boolean, val type: Users.Type, val provider: ExternalUsers.Provider? = null)
 
     companion object {
         fun getUserInfos(user: User): UserInfo = when (user.type) {
@@ -13,13 +14,13 @@ class UserService {
                 val localUser = transaction {
                     LocalUser[user.id]
                 }
-                UserInfo(localUser.username, user.type, user.administrator)
+                UserInfo(localUser.id.value, localUser.username, user.administrator, user.type)
             }
             Users.Type.EXTERNAL -> {
                 val externalUser = transaction {
                     ExternalUser[user.id]
                 }
-                UserInfo(externalUser.username, user.type, user.administrator)
+                UserInfo(externalUser.id.value, externalUser.username, user.administrator, user.type, externalUser.provider)
             }
         }
 
@@ -30,5 +31,27 @@ class UserService {
         fun isAdministrator(id: Int) = findById(id)?.administrator
 
         fun getUsernameFromId(id: Int) = findById(id)
+
+        fun follow(followerId: Int, followedId: Int) {
+            transaction {
+                val followingUser = findById(followedId)
+                val followedUser = findById(followedId)
+                if (followingUser != null && followedUser != null) {
+                    val current = followingUser.following
+                    followingUser.following = SizedCollection(current + followedUser)
+                }
+            }
+        }
+
+        fun unfollow(followerId: Int, followedId: Int) {
+            transaction {
+                val followingUser = findById(followedId)
+                val followedUser = findById(followedId)
+                if (followingUser != null && followedUser != null) {
+                    val current = followingUser.following
+                    followingUser.following = SizedCollection(current - followedUser)
+                }
+            }
+        }
     }
 }

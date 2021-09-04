@@ -44,6 +44,8 @@ class BoggleGrid(private val size: Int, private val dictionary: Dictionary) {
         return solutions
     }
 
+    fun getGrid(): List<List<Char>> = tiles.map { line -> line.map { tile -> tile.value.uppercaseChar() } }
+
     override fun toString(): String {
         return tiles.joinToString("\n") { line -> line.map { it.value }.joinToString(" ") }
     }

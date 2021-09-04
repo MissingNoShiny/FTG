@@ -1,4 +1,4 @@
-package xyz.missingnoshiny.ftg.node.events
+package xyz.missingnoshiny.ftg.node.events.server
 
 import kotlinx.serialization.Serializable
 import xyz.missingnoshiny.ftg.core.events.OutgoingEvent

@@ -17,13 +17,16 @@ fun Application.configureAuthentication() {
 
     install(Authentication) {
         jwt("auth-jwt") {
-            this.realm = realm
             verifier(
                 JWT
                     .require(Algorithm.HMAC256(secret))
                     .withAudience(audience)
                     .build()
             )
+
+            validate { jwtCredential ->
+                JWTPrincipal(jwtCredential.payload)
+            }
 
             // Retrieve token from httponly cookie instead ot header to prevent XSS attacks
             authHeader {

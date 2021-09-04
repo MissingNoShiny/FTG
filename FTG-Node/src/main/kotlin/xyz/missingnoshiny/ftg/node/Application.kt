@@ -10,13 +10,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import xyz.missingnoshiny.ftg.core.events.EmptyContext
 import xyz.missingnoshiny.ftg.core.events.WebsocketSessionEventHandler
-import xyz.missingnoshiny.ftg.node.events.NodeHeartbeatEvent
-import xyz.missingnoshiny.ftg.node.events.NodeReadyEvent
+import xyz.missingnoshiny.ftg.node.events.server.NodeHeartbeatEvent
+import xyz.missingnoshiny.ftg.node.events.server.NodeReadyEvent
 import xyz.missingnoshiny.ftg.node.games.Room
-import xyz.missingnoshiny.ftg.node.plugins.configureAuthentication
-import xyz.missingnoshiny.ftg.node.plugins.configureCORS
-import xyz.missingnoshiny.ftg.node.plugins.configureRouting
-import xyz.missingnoshiny.ftg.node.plugins.configureSerialization
+import xyz.missingnoshiny.ftg.node.games.boggle.BoggleGame
+import xyz.missingnoshiny.ftg.node.plugins.*
 import kotlin.system.exitProcess
 
 val rooms = HashMap<String, Room>()
@@ -31,14 +29,19 @@ fun main(args: Array<String>): Unit =
 fun Application.module(testing: Boolean = false) {
     configureSerialization()
     configureAuthentication()
-    configureRouting()
     configureCORS()
+    configureRouting()
+    configureSockets()
 }
 
 @Suppress("unused")
 fun Application.test() {
     val client = HttpClient {
         install(WebSockets)
+    }
+    launch {
+        val dictionary = BoggleGame.frenchDictionary
+        println(dictionary.getLetterFrequencies())
     }
 
     launch {
@@ -54,7 +57,7 @@ fun Application.test() {
 
             while (true) {
                 if (!serverConnectionHandler!!.connected) break
-                serverConnectionHandler!!.emitEvent(NodeHeartbeatEvent(rooms.mapValues { it.value.users.map { user -> user.id }}))
+                serverConnectionHandler!!.emitEvent(NodeHeartbeatEvent(rooms.mapValues { it.value.toSerializable() }))
                 println("Ok ${rooms.size}")
                 delay(5000)
             }

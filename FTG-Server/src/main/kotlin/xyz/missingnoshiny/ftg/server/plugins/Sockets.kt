@@ -13,6 +13,7 @@ import xyz.missingnoshiny.ftg.server.events.NodeReadyEvent
 import xyz.missingnoshiny.ftg.server.events.NodeRemoveRoomEvent
 import xyz.missingnoshiny.ftg.server.events.NodeServerEventContext
 import xyz.missingnoshiny.ftg.server.nodes
+import xyz.missingnoshiny.ftg.server.rooms
 import java.time.Duration
 import kotlin.time.ExperimentalTime
 
@@ -44,6 +45,9 @@ fun Application.configureSockets() {
 
             nodes += node
             handler.handleIncomingEvents()  // Blocking until connection is closed
+            node.rooms.forEach {
+                rooms.remove(it.key)
+            }
             nodes -= node
         }
     }
