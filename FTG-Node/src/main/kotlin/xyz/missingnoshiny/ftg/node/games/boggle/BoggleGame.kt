@@ -36,7 +36,6 @@ class BoggleGame(players: List<User>, room: Room) : Game(players, room) {
         while (true) {
             delay(1000)
             timeLeft--
-            room.broadcastEventToRoom(BoggleUpdateTimerEvent(timeLeft))
             if (timeLeft <= 0) {
                 stop()
                 break

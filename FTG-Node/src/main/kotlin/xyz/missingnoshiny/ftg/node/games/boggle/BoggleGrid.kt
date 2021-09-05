@@ -18,6 +18,7 @@ class BoggleGrid(private val size: Int, private val dictionary: Dictionary) {
     val maxScore = solutions.calculateScore()
 
     private fun findWordsRec(x: Int, y: Int, currentWord: String, visited: Array<BooleanArray>, foundWords: Trie) {
+        println("$x $y $currentWord")
         val word = dictionary.getFromKey(currentWord)
         if (word != null) foundWords.insert(word)
         visited[x][y] = true

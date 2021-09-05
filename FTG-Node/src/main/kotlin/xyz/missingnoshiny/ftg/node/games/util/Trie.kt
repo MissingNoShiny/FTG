@@ -30,7 +30,7 @@ class Trie : Iterable<String> {
     }
 
     fun hasPrefix(prefix: String): Boolean {
-        return getNode(prefix)?.children?.isNotEmpty() ?: false
+        return getNode(prefix) != null
     }
 
     fun getFromKey(key: String): String? {

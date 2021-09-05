@@ -6,12 +6,9 @@ import xyz.missingnoshiny.ftg.node.games.boggle.downloadBoggleDictionary
 import java.nio.file.Path
 
 fun main() {
-    val dictionary = downloadBoggleDictionary()
-    dictionary.writeToFile(Path.of("dictionary2.txt"))
-    /*
-        val grid = BoggleGrid(3, dictionary)
-        println(grid)
-        println(grid.solutions.toList())
-     */
+    val dictionary = BoggleGame.frenchDictionary
+    val grid = BoggleGrid(3, dictionary)
+    println(grid)
+    println(grid.solutions.toList())
 
 }

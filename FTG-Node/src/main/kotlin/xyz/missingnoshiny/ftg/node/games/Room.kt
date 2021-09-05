@@ -109,8 +109,8 @@ class Room(private val id: String, private val isPublic: Boolean) {
         game = BoggleGame(players, this)
         state = RoomState.PLAYING
         (game as BoggleGame).let {
-            broadcastEventToPlayers(BoggleStartEvent(it.getGrid(), it.getMaxScore(), it.getWordCount(), true))
-            broadcastEventToNonPlayers(BoggleStartEvent(it.getGrid(), it.getMaxScore(), it.getWordCount(), false))
+            broadcastEventToPlayers(BoggleStartEvent(it.getGrid(), it.getMaxScore(), it.getWordCount(), 180, true))
+            broadcastEventToNonPlayers(BoggleStartEvent(it.getGrid(), it.getMaxScore(), it.getWordCount(), 180, false))
         }
 
     }
