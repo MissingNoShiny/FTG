@@ -41,7 +41,8 @@ val categories = listOf(
     "Noms_communs_en_français",
     "Formes_de_noms_communs_en_français",
     "Verbes_en_français",
-    "Formes_de_verbes_en_français"
+    "Formes_de_verbes_en_français",
+    "Prépositions_en_français"
 )
 
 val parameters = mutableMapOf(

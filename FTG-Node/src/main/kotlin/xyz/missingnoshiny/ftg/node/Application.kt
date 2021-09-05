@@ -59,7 +59,7 @@ fun Application.test() {
                 if (!serverConnectionHandler!!.connected) break
                 serverConnectionHandler!!.emitEvent(NodeHeartbeatEvent(rooms.mapValues { it.value.toSerializable() }))
                 println("Ok ${rooms.size}")
-                delay(5000)
+                delay(1000)
             }
         }
         exitProcess(-1)

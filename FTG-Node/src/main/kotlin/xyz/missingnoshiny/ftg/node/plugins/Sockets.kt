@@ -30,9 +30,12 @@ fun Application.configureSockets() {
                 if (id !in rooms) return@webSocket this.close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Invalid room id"))
                 val room = rooms[id]!!
 
+                val userId = principal.subject!!.toInt()
+                if (room.hasUser(userId)) return@webSocket this.close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Already playing"))
+
                 val username = principal.payload.getClaim("username").asString()
                 val administrator = principal.payload.getClaim("administrator").asBoolean()
-                val user = User(principal.subject!!.toInt(), username, administrator, room, this)
+                val user = User(userId, username, administrator, room, this)
 
                 room.addUser(user)
                 println("Added to room")

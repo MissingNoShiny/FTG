@@ -37,7 +37,9 @@ class BoggleGrid(private val size: Int, private val dictionary: Dictionary) {
 
         tiles.forEachIndexed { x, line ->
             for (y in line.indices) {
-                findWordsRec(x, y, "", visited, solutions)
+                visited[x][y] = true
+                findWordsRec(x, y, tiles[x][y].value.toString(), visited, solutions)
+                visited[x][y] = false
             }
         }
 

@@ -115,10 +115,8 @@ class Room(private val id: String, private val isPublic: Boolean) {
 
     }
 
-    suspend fun stopGame() {
-        (game as BoggleGame).let {
-            it.stop()
-        }
+    private fun stopGame() {
+        (game as BoggleGame).timeLeft = 0
     }
 
     suspend fun handleCommand(sender: User, command: String) {
@@ -184,4 +182,6 @@ class Room(private val id: String, private val isPublic: Boolean) {
             state
         )
     }
+
+    fun hasUser(id: Int) = users.any { it.id == id }
 }

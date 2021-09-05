@@ -46,6 +46,7 @@ class BoggleGame(players: List<User>, room: Room) : Game(players, room) {
     }
 
     suspend fun stop() {
+        timeLeft = 0
         val solutions = grid.solutions.map { Guess(it.normalize().uppercase(), it) }
         room.broadcastEventToRoom(BoggleStopEvent(solutions))
         players.forEach {
@@ -60,8 +61,8 @@ class BoggleGame(players: List<User>, room: Room) : Game(players, room) {
 
         val word = grid.solutions.getFromKey(guess.lowercase())
         if (word != null) {
-            if (guess in guesses[player]!!) {
-                player.handler.emitEvent(BoggleWrongGuessEvent(guess, GuessStatus.ALREADY_GUESSED))
+            if (word in guesses[player]!!) {
+                return player.handler.emitEvent(BoggleWrongGuessEvent(guess, GuessStatus.ALREADY_GUESSED))
             }
 
             guesses[player]!!.insert(word)
